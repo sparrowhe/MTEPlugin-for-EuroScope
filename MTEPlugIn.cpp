@@ -5,7 +5,7 @@
 
 #ifndef COPYRIGHTS
 #define PLUGIN_NAME "MTEPlugin"
-#define PLUGIN_AUTHOR "Kingfu Chan"
+#define PLUGIN_AUTHOR "Kingfu Chan & Dezheng He"
 #define PLUGIN_COPYRIGHT "MIT License, Copyright (c) 2022 Kingfu Chan"
 #define GITHUB_LINK "https://github.com/KingfuChan/MTEPlugin-for-EuroScope"
 #endif // !COPYRIGHTS
@@ -82,7 +82,7 @@ CMTEPlugIn::CMTEPlugIn(void)
 #ifdef DEBUG
 		VERSION_FILE_STR " DEBUG",
 #else
-		VERSION_FILE_STR,
+		VERSION_FILE_STR " MAGIC",
 #endif // DEBUG
 		PLUGIN_AUTHOR,
 		PLUGIN_COPYRIGHT)
@@ -270,13 +270,13 @@ void CMTEPlugIn::OnGetTagItem(CFlightPlan FlightPlan, CRadarTarget RadarTarget,
 			sprintf_s(sItemString, 4, "ILS");
 			break;
 		case 0: { // no cleared level or CFL==RFL
-			if (!IsCFLAssigned(FlightPlan)) {
-				sprintf_s(sItemString, 5, "    ");
-				break;
-			}
-			else {
+			// if (!IsCFLAssigned(FlightPlan)) {
+			sprintf_s(sItemString, 5, "    ");
+			break;
+			// }
+			// else {
 				cflAlt = FlightPlan.GetClearedAltitude(); // difference: no ILS/VA, no CFL will show RFL
-			}
+			// }
 			[[fallthrough]];
 		}
 		default: {// have a cleared level
@@ -540,23 +540,24 @@ void CMTEPlugIn::OnFunctionCall(int FunctionId, const char* sItemString, POINT P
 			regex rxd("^([0-9]+)\\.$");
 			regex rxn("^([0-9]+)$");
 			smatch match;
-			if (regex_match(input, match, rxfd)) {
-				tgtAlt = stoi(match[1]);
-			}
-			else if (regex_match(input, match, rxf)) {
-				tgtAlt = stoi(match[1]) * 100;
-			}
-			else if (regex_match(input, match, rxd)) {
-				tgtAlt = MetricAlt::LvlMtoFeet(stoi(match[1]));
-			}
-			else if (regex_match(input, match, rxn)) {
-				tgtAlt = MetricAlt::LvlMtoFeet(stoi(match[1]) * 100);
-			}
+				if (regex_match(input, match, rxfd)) {
+					tgtAlt = stoi(match[1]);
+				}
+				else if (regex_match(input, match, rxf)) {
+					tgtAlt = stoi(match[1]) * 10;
+				}
+				else if (regex_match(input, match, rxd)) {
+					tgtAlt = MetricAlt::LvlMtoFeet(stoi(match[1]));
+				}
+				else if (regex_match(input, match, rxn)) {
+					tgtAlt = MetricAlt::LvlMtoFeet(stoi(match[1]) * 10);
+				}
 			int trslvl, elev;
 			string aptgt = m_TransitionLevel->GetTargetAirport(FlightPlan, trslvl, elev);
 			tgtAlt += aptgt.size() && tgtAlt < trslvl ? elev : 0; // convert QNH to QFE
 		}
-		FlightPlan.GetControllerAssignedData().SetClearedAltitude(tgtAlt); // no need to check overflow
+		CFlightPlanControllerAssignedData fpData = FlightPlan.GetControllerAssignedData();
+		fpData.SetClearedAltitude(tgtAlt); // no need to check overflow
 
 		break; }
 	case TAG_ITEM_FUNCTION_CFL_MENU: {
@@ -613,12 +614,12 @@ void CMTEPlugIn::OnFunctionCall(int FunctionId, const char* sItemString, POINT P
 				}
 			}
 			for (auto it = m_mtof.rbegin(); it != m_mtof.rend(); it++) {
-				int m = it->first / 100;
-				int f = it->second / 100;
-				char ms[4], fs[4];
-				sprintf_s(ms, 4, "%d", m);
-				sprintf_s(fs, 4, "%d", f);
-				AddPopupListElement(ms, fs, TAG_ITEM_FUNCTION_CFL_SET, it->second == minAlt, POPUP_ELEMENT_NO_CHECKBOX, false, false);
+				int m = it->first / 10;
+				// int f = it->second / 100;
+				char ms[6]; // fs[4];
+				sprintf_s(ms, 6, "%04d", m);
+				// sprintf_s(fs, 4, "%04d", f);
+				AddPopupListElement(ms, "", TAG_ITEM_FUNCTION_CFL_SET, it->second == minAlt, POPUP_ELEMENT_NO_CHECKBOX, false, false);
 			}
 		}
 		else {
@@ -630,7 +631,6 @@ void CMTEPlugIn::OnFunctionCall(int FunctionId, const char* sItemString, POINT P
 				AddPopupListElement(fs, "", TAG_ITEM_FUNCTION_CFL_SET, fl / 10 == (int)round(cmpAlt / 1000.0), POPUP_ELEMENT_NO_CHECKBOX, false, false);
 			}
 		}
-		AddPopupListElement("[   ", "  ]", TAG_ITEM_FUNCTION_CFL_EDIT, false, POPUP_ELEMENT_NO_CHECKBOX, false, true);
 		AddPopupListElement("ILS", "", TAG_ITEM_FUNCTION_CFL_SET, false, POPUP_ELEMENT_NO_CHECKBOX, false, true);
 		AddPopupListElement("VA", "", TAG_ITEM_FUNCTION_CFL_SET, false, POPUP_ELEMENT_NO_CHECKBOX, false, true);
 		AddPopupListElement("NONE", "", TAG_ITEM_FUNCTION_CFL_SET, false, POPUP_ELEMENT_NO_CHECKBOX, false, true);
@@ -835,7 +835,7 @@ void CMTEPlugIn::OnFlightPlanControllerAssignedDataUpdate(CFlightPlan FlightPlan
 	if (FlightPlan.GetTrackingControllerIsMe()) {
 		if (DataType == CTR_DATA_TYPE_TEMPORARY_ALTITUDE &&
 			FlightPlan.GetCorrelatedRadarTarget().GetPosition().GetTransponderC() &&
-			(IsCFLAssigned(FlightPlan) || FlightPlan.GetControllerAssignedData().GetClearedAltitude())) {
+			(IsCFLAssigned(FlightPlan) || FlightPlan.GetControllerAssignedData().GetClearedAltitude() != 0)) {
 			// initiate CFL to be confirmed
 			m_TrackedRecorder->SetCFLConfirmed(FlightPlan.GetCallsign(), false);
 		}
