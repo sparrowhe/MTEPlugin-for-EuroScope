@@ -3,14 +3,12 @@
 #pragma once
 
 #include "pch.h"
-#include "resource.h"
-#include <EuroScopePlugIn.h>
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
 #include <stack>
 #include <regex>
-#include "Version.h"
+#include <atomic>
 #include "MTEPScreen.h"
 #include "MetricAlt.h"
 #include "ReCat.h"
@@ -47,8 +45,9 @@ private:
 	TrackedRecorder* m_TrackedRecorder;
 	TransitionLevel* m_TransitionLevel;
 	bool m_CustomCursor;
-	int m_AutoRetrack; // 0: off; 1: silent; 2: notified.
+	int m_AutoRetrack; // 0: off (default); 1: silent; 2: notified.
 	string m_CustomNumMap; // 0-9
+	int m_AmendCFL; // 0: off; 1: MTEP (default); 2: all.
 
 	void CallNativeItemFunction(const char* sCallsign, int FunctionId, POINT Pt, RECT Area);
 	void SetCustomCursor(void);
@@ -58,5 +57,6 @@ private:
 	void DeleteDepartureSequence(void);
 	void ResetTrackedRecorder(void);
 	bool LoadTransitionLevel(string filename);
+	bool LoadMetricAltitude(string filename);
 	string DisplayRouteMessage(string departure, string arrival);
 };
