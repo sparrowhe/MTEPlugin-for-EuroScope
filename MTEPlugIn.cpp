@@ -544,7 +544,7 @@ void CMTEPlugIn::OnFunctionCall(int FunctionId, const char* sItemString, POINT P
 					tgtAlt = stoi(match[1]);
 				}
 				else if (regex_match(input, match, rxf)) {
-					tgtAlt = stoi(match[1]) * 10;
+					tgtAlt = stoi(match[1]) * 100;
 				}
 				else if (regex_match(input, match, rxd)) {
 					tgtAlt = MetricAlt::LvlMtoFeet(stoi(match[1]));
@@ -631,6 +631,7 @@ void CMTEPlugIn::OnFunctionCall(int FunctionId, const char* sItemString, POINT P
 				AddPopupListElement(fs, "", TAG_ITEM_FUNCTION_CFL_SET, fl / 10 == (int)round(cmpAlt / 1000.0), POPUP_ELEMENT_NO_CHECKBOX, false, false);
 			}
 		}
+		AddPopupListElement("[  ]","", TAG_ITEM_FUNCTION_CFL_EDIT, false, POPUP_ELEMENT_NO_CHECKBOX, false, true);
 		AddPopupListElement("ILS", "", TAG_ITEM_FUNCTION_CFL_SET, false, POPUP_ELEMENT_NO_CHECKBOX, false, true);
 		AddPopupListElement("VA", "", TAG_ITEM_FUNCTION_CFL_SET, false, POPUP_ELEMENT_NO_CHECKBOX, false, true);
 		AddPopupListElement("NONE", "", TAG_ITEM_FUNCTION_CFL_SET, false, POPUP_ELEMENT_NO_CHECKBOX, false, true);
